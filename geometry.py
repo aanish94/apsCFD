@@ -74,22 +74,21 @@ class Geometry(object):
         # Iterate through each bound
         for idx, bound in enumerate(bounds):
 
+            bound_prev = bounds[idx - 1]
+
             # Handle first boundary
             if idx == 0:
-                x_left = self.x_min
-                x_right = bound
+                conditional = self.x_vector <= bound
             # Handle last boundary
             elif idx == len(bounds) - 1:
-                x_left = bounds[idx-1]
-                x_right = self.x_max
+                conditional = (self.x_vector > bound_prev)
             # Handle middle boundaries
             else:
-                x_left = bounds[idx - 1]
-                x_right = bound
+                conditional = (self.x_vector > bound_prev) & (
+                    self.x_vector <= bound)
 
             # Construct conditional list using boundaries
-            conditional_list.append(
-                (self.x_vector >= x_left) & (self.x_vector < x_right))
+            conditional_list.append(conditional)
 
         # Evaluate piece-wise defined function for a given x array
         y_vector = np.piecewise(self.x_vector, conditional_list, funcs)
@@ -212,8 +211,10 @@ def create_pressure_vessel_geometry():
     bounds_upper = [3, 6]
     h = 5
     w = 6
+
     sigmoid_function = lambda x: (1 / (1 + np.exp(-1 * h * x + w))) + 1
-    sigmoid_function_reverse = lambda x: (1 / (1 + np.exp(h * x - w - 18))) + 1
+
+    sigmoid_function_reverse = lambda x: 1 / (1 + np.exp(h * x - w - 18)) + 1
 
     funcs_upper = [sigmoid_function, sigmoid_function_reverse]
 
@@ -234,8 +235,8 @@ def create_pressure_vessel_geometry():
 if __name__ == "__main__":
     pass
 
-    sc = create_spacecraft_geometry()
-    sc.visualize(file_name='spacecraft.png')
+    # sc = create_spacecraft_geometry()
+    # sc.visualize(file_name='spacecraft.png')
 
-    pv = create_pressure_vessel_geometry()
-    pv.visualize(file_name='pressure_vessel.png', simple=False)
+    # pv = create_pressure_vessel_geometry()
+    # pv.visualize(file_name='pressure_vessel.png', simple=False)

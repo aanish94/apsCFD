@@ -16,35 +16,39 @@ class TestGeometry(unittest.TestCase):
         """
         """
 
-        sc = geometry.create_sc_geometry()
+        sc = geometry.create_spacecraft_geometry()
 
         # Confirm array lengths
-        self.assertEqual(sc.x_vector, sc.y_vector_top)
-        self.assertEqual(sc.x_vector, sc.y_vector_bottom)
-        self.assertEqual(sc.x_vector, sc.y_vector_top_reverse)
-        self.assertEqual(sc.x_vector, sc.y_vector_bottom_reverse)
+        self.assertEqual(len(sc.x_vector), len(sc.y_vector_top))
+        self.assertEqual(len(sc.x_vector), len(sc.y_vector_bottom))
+        self.assertEqual(len(sc.x_vector), len(sc.y_vector_top_reverse))
+        self.assertEqual(len(sc.x_vector), len(sc.y_vector_bottom_reverse))
 
         # Confirm array criteria
         self.assertGreater(min(sc.y_vector_top), max(sc.y_vector_bottom))
-        self.assertGreaterEqual(min(sc.y_vector_bottom), max(sc.y_vector_bottom_reverse))
-        self.assertLess(max(sc.y_vector_top), min(sc.y_vector_bottom))
+        self.assertGreaterEqual(min(sc.y_vector_bottom),
+                                max(sc.y_vector_bottom_reverse))
+        self.assertLess(max(sc.y_vector_top_reverse),
+                        min(sc.y_vector_bottom_reverse))
 
     def test_pressure_vessel(self):
         """
         """
 
-        pv = geometry.create_sc_geometry()
+        pv = geometry.create_pressure_vessel_geometry()
 
         # Confirm array lengths
-        self.assertEqual(pv.x_vector, pv.y_vector_top)
-        self.assertEqual(pv.x_vector, pv.y_vector_bottom)
-        self.assertEqual(pv.x_vector, pv.y_vector_top_reverse)
-        self.assertEqual(pv.x_vector, pv.y_vector_bottom_reverse)
+        self.assertEqual(len(pv.x_vector), len(pv.y_vector_top))
+        self.assertEqual(len(pv.x_vector), len(pv.y_vector_bottom))
+        self.assertEqual(len(pv.x_vector), len(pv.y_vector_top_reverse))
+        self.assertEqual(len(pv.x_vector), len(pv.y_vector_bottom_reverse))
 
         # Confirm array criteria
         self.assertGreater(min(pv.y_vector_top), max(pv.y_vector_bottom))
-        self.assertGreaterEqual(min(pv.y_vector_bottom), max(pv.y_vector_bottom_reverse))
-        self.assertLess(max(pv.y_vector_top), min(pv.y_vector_bottom))
+        self.assertGreaterEqual(min(pv.y_vector_bottom),
+                                max(pv.y_vector_bottom_reverse))
+        self.assertLess(max(pv.y_vector_top_reverse),
+                        min(pv.y_vector_bottom_reverse))
 
 
 if __name__ == "__main__":
