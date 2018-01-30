@@ -2,7 +2,6 @@
 
 """ Provides Geometry class to specify the geometry of a symmetrical shape.
 
-More Information:
 """
 
 import matplotlib.pyplot as plt
@@ -81,7 +80,7 @@ class Geometry(object):
                 x_right = bound
             # Handle last boundary
             elif idx == len(bounds) - 1:
-                x_left = bound
+                x_left = bounds[idx-1]
                 x_right = self.x_max
             # Handle middle boundaries
             else:
@@ -101,10 +100,11 @@ class Geometry(object):
 
         return y_vector
 
-    def visualize(self, file_name=None):
+    def visualize(self, file_name=None, simple=False):
         """Output a visualization of the geometry.
 
         :param <str> file_name: Save plot as...
+        :param <bool> simple: Specification of plot type
         """
 
         # Instantiate figure and axes objects
@@ -125,15 +125,24 @@ class Geometry(object):
                    ymin=self.y_vector_top_reverse[-1], ymax=self.y_vector_top[-1],
                    color='r', lw=3)
 
-        # Color in the space surrounding the geometry
-        ax.fill_between(self.x_vector,
-                        self.y_vector_top_reverse, self.y_vector_bottom_reverse,
-                        facecolor='black')
-        ax.fill_between(self.x_vector, self.y_vector_top, self.y_vector_bottom,
-                        facecolor='black')
+        if simple:
+            # Plot the upper and bottom boundaries
+            ax.plot(self.x_vector, self.y_vector_bottom,
+                    label='Top', color='r', lw=3)
 
-        # Turn off axes
-        plt.axis('off')
+            ax.plot(self.x_vector, self.y_vector_bottom_reverse,
+                    label='Top - Reverse', color='r', lw=3)
+        else:
+            # Color in the space surrounding the geometry
+            ax.fill_between(self.x_vector,
+                            self.y_vector_top_reverse, self.y_vector_bottom_reverse,
+                            facecolor='black')
+            ax.fill_between(self.x_vector, self.y_vector_top, self.y_vector_bottom,
+                            facecolor='black')
+
+            # Turn off axes
+            plt.axis('off')
+
         # Save figure to file
         file_name = file_name or 'geometry.png'
         plt.savefig(file_name, bbox_inches='tight', pad_inches=0)
@@ -166,6 +175,8 @@ def create_spacecraft_geometry():
 
 def create_rocket_engine_geometry():
     """Create a Geometry class representing a rocket engine.
+
+    :return <Geometry> spacecraft: Geometry class
     """
 
     bounds_lower = [3, 7, 33]
@@ -187,15 +198,29 @@ def create_rocket_engine_geometry():
 
 def create_pressure_vessel_geometry():
     """Create a Geometry class representing a pressure vessel.
+
+    The sigmoid function is used to approximate the 2-D profile:
+        => wikipedia.org/wiki/Sigmoid_function
+        => y = 1 / (1 + e ^ (-1 * h * x + w))
+            h = y-factor
+            w = x-factor
+
+    :return <Geometry> spacecraft: Geometry class
     """
 
-    bounds_lower = [3, 7, 33]
-    funcs_lower = [0, lambda y: y ** 1.5, 0]
+    # configure sigmoid function
+    bounds_upper = [3, 6]
+    h = 5
+    w = 6
+    sigmoid_function = lambda x: (1 / (1 + np.exp(-1 * h * x + w))) + 1
+    sigmoid_function_reverse = lambda x: (1 / (1 + np.exp(h * x - w - 18))) + 1
 
-    bounds_upper = None
-    funcs_upper = 100
+    funcs_upper = [sigmoid_function, sigmoid_function_reverse]
 
-    x_max = 10
+    bounds_lower = None
+    funcs_lower = 0
+
+    x_max = 6
     x_min = 0
     resolution = 10000
 
@@ -209,12 +234,8 @@ def create_pressure_vessel_geometry():
 if __name__ == "__main__":
     pass
 
-#    x = np.linspace(-2.5, 2.5, 600)
-#    y_top = np.piecewise(x, [x < 0, x >= 0], [lambda x: -x, lambda x: x**2])
-#    y_bottom = np.zeros(x.shape)
-#
-#    plt.plot(x, y_top, 'r')
-#    plt.plot(x, y_bottom, 'b')
-
     sc = create_spacecraft_geometry()
-    sc.visualize()
+    sc.visualize(file_name='spacecraft.png')
+
+    pv = create_pressure_vessel_geometry()
+    pv.visualize(file_name='pressure_vessel.png', simple=False)
