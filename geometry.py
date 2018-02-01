@@ -163,7 +163,7 @@ def create_spacecraft_geometry():
 
     x_max = 10
     x_min = 0
-    resolution = 10000
+    resolution = 200
 
     spacecraft = Geometry(x_max, x_min, resolution,
                           bounds_upper, funcs_upper,

@@ -84,12 +84,21 @@ def algebraic_structured_mesh(geometry):
             y_final[idx, jdx] = (height_vector[idx] * (zeta - gamma * alpha **
                                                        chi) / (alpha ** chi + 1)) + geometry.y_vector_bottom[idx]
 
+    x_final = y_final.copy()
+    for j in np.arange(0, JL):
+        x_final[:, j] = xi
+
+    return x_final, y_final
+
     y_combined = np.concatenate((np.fliplr(-y_final[:, 1:]), y_final), axis=1)
     x_combined = y_combined.copy()
 
     JL_NEW = y_combined.shape[1]
     for j in np.arange(0, JL_NEW):
+        Patch
         x_combined[:, j] = xi
+
+    return x_combined, y_combined
 
     fig, ax = plt.subplots(figsize=(12, 9))
 
@@ -113,7 +122,56 @@ def algebraic_structured_mesh(geometry):
     return
 
 
+def plot_meshgrid(xv, yv):
+
+    fig, ax = plt.subplots()
+
+#    assert(xv.shape == yv.shape)
+#    x_dim, y_dim = xv.shape
+#    for idx in np.arange(0, x_dim):
+#        for jdx in np.arange(0, y_dim):
+#            plt.vlines(xv[x_dim, y_dim], ymin=yv[x_dim, 0], ymax=yv[x_dim, -1])
+
+    for idx in np.arange(0, len(xv)):
+        for jdx in np.arange(0, len(yv)):
+            pass
+            plt.plot(xv[idx, jdx], yv[idx, jdx], marker='x', markersize=10)
+        print 'beep'
+
+    plt.margins(0.1, 0.1)
+
+
 if __name__ == "__main__":
     pass
     sc = create_spacecraft_geometry()
-    algebraic_structured_mesh(sc)
+    x1, y1 = algebraic_structured_mesh(sc)
+
+    # plot_meshgrid(x1, y1)
+
+#    cube = 0.5
+#
+#    xmax = max(sc.x_vector)
+#    xmin = min(sc.x_vector)
+#
+#    xnum = (xmax-xmin) / cube
+#
+#    xvec = np.linspace(xmin, xmax, num=xnum)
+#
+#    ymax = max(sc.y_vector_top)
+#    ymin = min(sc.y_vector_bottom)
+#
+#    ynum = int((ymax - ymin) / cube)
+#
+#    yscale = len(sc.y_vector_top) / ynum
+#
+#    yfinal = np.zeros((int(xnum), int(ynum)))
+#    xfinal = np.zeros((int(xnum), int(ynum)))
+#
+#    for idx, x in enumerate(xvec):
+#
+#        for jdx in np.arange(0, yscale):
+#            yvec = np.linspace(sc.y_vector_bottom[jdx], sc.y_vector_top[jdx], num=ynum)
+#
+#        for jdx, y in enumerate(yvec):
+#            yfinal[idx, jdx] = y
+#            xfinal[idx, jdx] = x
