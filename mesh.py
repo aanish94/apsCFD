@@ -7,6 +7,7 @@ into a computional domain via grid generation.
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import interpolate
 
 from geometry import create_spacecraft_geometry
 
@@ -56,87 +57,102 @@ class MeshCell(object):
 #    get_bottom_neighbor()
 
 
-def algebraic_structured_mesh(geometry):
-    """Develop a structured mesh using the simple algebraic method.
+def create_structured_mesh_via_algebraic_method(geometry, num_cells=None, cell_size=None):
+    """Construct a structured mesh for the given physical domain via the algebraic method.
+
+    :param <Geometry> geometry: A Geometry object representing the physical domain
+    :param <list> num_cells: The number of cells in the x and y dimensions
+    :param <float> cell_size: The desired size of each square cell
+
+    :return <np.array> x_computational: 2-D X matrix representing a computational domain
+    :return <np.array> y_computational: 2-D Y matrix representing a computational domain
+    :return <tuple> stats: Statistics about the generated mesh
+
     """
 
-    IL = 200
-    JL = 200
+    # Extract the x vector and associated max/min x values
+    x_vector = geometry.x_vector
+    x_max = max(x_vector)
+    x_min = min(x_vector)
 
-    xmax = max(geometry.x_vector)
-    xmin = min(geometry.x_vector)
+    # Extract the top & bottom y vectors and determine the max/min y values
+    y_vector_top = geometry.y_vector_top
+    y_vector_bottom = geometry.y_vector_bottom
+    y_max = max(y_vector_top)
+    y_min = min(y_vector_bottom)
 
-    beta = 1.5
-    zeta = beta + 1
-    gamma = beta - 1
-    alpha = zeta / gamma
+    # Determine the number of cells in the x, y dimensions for either input
+    # type
+    if not num_cells and cell_size:
+        x_num = int((x_max - x_min) / cell_size)
+        y_num = int((y_max - y_min) / (2 * cell_size))
 
-    height_vector = geometry.y_vector_top - geometry.y_vector_bottom
+        x_cell_size = y_cell_size = cell_size
+    elif num_cells:
+        x_num = int(num_cells[0])
+        y_num = int(num_cells[1] / 2)
+        # Calculate associated cell size
+        x_cell_size = (x_max - x_min) / x_num
+        y_cell_size = (y_max - y_min) / y_num
+    else:
+        raise ValueError("Invalid inputs!")
 
-    xi = np.linspace(xmin, xmax, num=IL)
-    eta = np.linspace(0, 1, num=JL)
+    # Alert user if the desired grid resolution is too coarse
+    if y_num < 0.5 * len(y_vector_top) or x_num < 0.5 * len(x_vector):
+        print("WARNING! Input grid size {} may be too small.".format(
+            (x_num, y_num * 2)))
 
-    y_final = np.zeros((IL, JL))
+    # Instantiate the x and y computational domains - the y domain will be
+    # doubled later
+    x_computational = np.zeros((x_num, y_num * 2))
+    y_computational = np.zeros((x_num, y_num))
 
-    for idx in np.arange(0, IL):
-        for jdx in np.arange(0, JL):
-            chi = 1 - eta[jdx]
-            y_final[idx, jdx] = (height_vector[idx] * (zeta - gamma * alpha **
-                                                       chi) / (alpha ** chi + 1)) + geometry.y_vector_bottom[idx]
+    # Scale the x vector to the size of the computational domain (xi)
+    x_vector_scaled = np.linspace(x_min, x_max, num=x_num)
 
-    x_final = y_final.copy()
-    for j in np.arange(0, JL):
-        x_final[:, j] = xi
+    # Define an equally spaced grid in x
+    for jdx in np.arange(0, y_num * 2):
+        x_computational[:, jdx] = x_vector_scaled
 
-    return x_final, y_final
+    # Scale the y vectors to the size of the computational domain (eta)
+    scale_function_top = interpolate.interp1d(x_vector, y_vector_top)
+    scale_function_bottom = interpolate.interp1d(x_vector, y_vector_bottom)
 
-    y_combined = np.concatenate((np.fliplr(-y_final[:, 1:]), y_final), axis=1)
-    x_combined = y_combined.copy()
+    y_vector_top_scaled = scale_function_top(x_vector_scaled)
+    y_vector_bottom_scaled = scale_function_bottom(x_vector_scaled)
 
-    JL_NEW = y_combined.shape[1]
-    for j in np.arange(0, JL_NEW):
-        Patch
-        x_combined[:, j] = xi
+    # Define equally an equally spaced grid in y
+    for idx in np.arange(0, x_num):
+        for jdx in np.arange(0, y_num):
+            y_height = y_vector_top_scaled[idx] - y_vector_bottom_scaled[idx]
+            y_computational[idx, jdx] = y_vector_bottom_scaled[
+                idx] + (y_height * jdx) / (y_num - 1)
 
-    return x_combined, y_combined
+    # Construct complete y grid by utilizing the symmetric nature of the
+    # geometry
+    y_computational = np.concatenate(
+        (np.fliplr(-1 * y_computational), y_computational), axis=1)
+
+    # Basic error checking
+    if x_computational.shape != y_computational.shape:
+        raise ValueError("X {} & Y {} shapes do not match!".format(
+            x_computational.shape, y_computational.shape))
+
+    return x_computational, y_computational, (x_num, y_num, x_cell_size, y_cell_size)
+
+
+def visualize_mesh(geometry, x, y):
+    """Visualize a mesh created on a physical domain.
+
+    :param <Geometry> geometry: A Geometry object representing the physical domain
+    :param <np.array> x_computational: 2-D X matrix representing a computational domain
+    :param <np.array> y_computational: 2-D Y matrix representing a computational domain
+
+    """
 
     fig, ax = plt.subplots(figsize=(12, 9))
 
-    plt.plot(x_combined, y_combined, zorder=1, alpha=0.9, color='k')
-
-    textstr = 'IL: {} \nJL: {} \nbeta: {}'.format(IL, JL_NEW, beta)
-
-    # these are matplotlib.patch.Patch properties
-    props = dict(boxstyle='round', facecolor='#FF5733', alpha=0.5)
-    # place a text box in upper left in axes coords
-    ax.text(0.05, 0.95, textstr, transform=ax.transAxes, fontsize=18,
-            verticalalignment='top', bbox=props)
-
-    plt.autoscale(axis='both', tight=False)
-    plt.margins(0.01, 0.01)
-    plt.xlabel('x [m]', fontsize=14)
-    plt.ylabel('y [m]', fontsize=14)
-    plt.title('Geometry Mesh', fontsize=20)
-    plt.subplots_adjust(top=0.925)
-
-    return
-
-
-def plot_meshgrid(xv, yv):
-
-    fig, ax = plt.subplots()
-
-#    assert(xv.shape == yv.shape)
-#    x_dim, y_dim = xv.shape
-#    for idx in np.arange(0, x_dim):
-#        for jdx in np.arange(0, y_dim):
-#            plt.vlines(xv[x_dim, y_dim], ymin=yv[x_dim, 0], ymax=yv[x_dim, -1])
-
-    for idx in np.arange(0, len(xv)):
-        for jdx in np.arange(0, len(yv)):
-            pass
-            plt.plot(xv[idx, jdx], yv[idx, jdx], marker='x', markersize=10)
-        print 'beep'
+    plt.plot(x, y)
 
     plt.margins(0.1, 0.1)
 
@@ -144,34 +160,11 @@ def plot_meshgrid(xv, yv):
 if __name__ == "__main__":
     pass
     sc = create_spacecraft_geometry()
-    x1, y1 = algebraic_structured_mesh(sc)
+    # x1, y1 = algebraic_structured_mesh(sc)
 
     # plot_meshgrid(x1, y1)
+    x, y, stats = create_structured_mesh_via_algebraic_method(sc, num_cells=[
+                                                              100, 100])
+    # x, y = create_structured_mesh_via_algebraic_method(sc, cell_size=1)
 
-#    cube = 0.5
-#
-#    xmax = max(sc.x_vector)
-#    xmin = min(sc.x_vector)
-#
-#    xnum = (xmax-xmin) / cube
-#
-#    xvec = np.linspace(xmin, xmax, num=xnum)
-#
-#    ymax = max(sc.y_vector_top)
-#    ymin = min(sc.y_vector_bottom)
-#
-#    ynum = int((ymax - ymin) / cube)
-#
-#    yscale = len(sc.y_vector_top) / ynum
-#
-#    yfinal = np.zeros((int(xnum), int(ynum)))
-#    xfinal = np.zeros((int(xnum), int(ynum)))
-#
-#    for idx, x in enumerate(xvec):
-#
-#        for jdx in np.arange(0, yscale):
-#            yvec = np.linspace(sc.y_vector_bottom[jdx], sc.y_vector_top[jdx], num=ynum)
-#
-#        for jdx, y in enumerate(yvec):
-#            yfinal[idx, jdx] = y
-#            xfinal[idx, jdx] = x
+    visualize_mesh(sc, x, y)
