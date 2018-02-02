@@ -1,4 +1,4 @@
-# CFD #
+# apsCFD #
 
 The project solves the conservation laws (mass, momentum and energy) for a physical
 domain by executing:
