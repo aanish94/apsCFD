@@ -17,8 +17,8 @@ about the y-axis. The geometry is input via a piecewise-defined function.
 
 TODO: Adapt Method of Characteristics Code for a perfect-gas for a real gas
 
-- [https://www.aoe.vt.edu/content/dam/aoe_vt_edu/programs/graduate/forms/lectnotes3-09All101812.pdf](Concepts of Gasdynamics)
-- [https://www.mathworks.com/help/aerotbx/examples/solving-for-the-exit-flow-of-a-supersonic-nozzle.html](MatLab Documentation)
+- [Concepts of Gasdynamics](https://www.aoe.vt.edu/content/dam/aoe_vt_edu/programs/graduate/forms/lectnotes3-09All101812.pdf)
+- [MatLab Documentation](https://www.mathworks.com/help/aerotbx/examples/solving-for-the-exit-flow-of-a-supersonic-nozzle.html)
 
 ## Mesh/Grid Generation ##
 
@@ -41,12 +41,12 @@ TODO: Update mesh script to initialize MeshGrid and Mesh classes and to handle m
 
 ## Physics ##
 
-- [http://www.cantera.org/docs/sphinx/html/cython/tutorial.html](Cantera - Chemical Kinetics & Thermodynamics)
-- [https://fenicsproject.org/tutorial/](FEniCS - PDE Solver)
+- [Cantera - Chemical Kinetics & Thermodynamics](http://www.cantera.org/docs/sphinx/html/cython/tutorial.html)
+- [FEniCS - PDE Solver](https://fenicsproject.org/tutorial/)
 
 ## Post-Processing ##
 
 ## Miscellaneous ##
 
-- [https://github.com/meshadaptation/pragmatic](Dynamic Mesh)
+- [Dynamic Mesh](https://github.com/meshadaptation/pragmatic)
 - Parallelization
