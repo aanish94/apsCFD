@@ -487,7 +487,7 @@ def moc_minimum_length_nozzle(mexit, throat_height, gamma, nwaves, plot_fig):
     # Complex Wave Reflection
     a2, n2, x2, y2 = complex_wave(a1[-1, :], n1[-1, :], x1[-1, :], y1[-1, :], 0, gamma)
     # simple wave boundary
-    a3, n3, x3, y3 = simple_wave_boundary(a2[:, -1], n2[:, -1], x2[:, -1], y2[:, -1], 1, xi[-1], yi[-1], ai[-1], gamma)
+    a3, n3, x3, y3 = simple_wave_boundary(a2[:, -1], n2[:, -1], x2[:, -1], y2[:, -1], 1, ai[-1], xi[-1], yi[-1],  gamma)
     
     # plot solution
     if plot_fig:
