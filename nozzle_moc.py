@@ -64,7 +64,7 @@ def calculate_mach_numbers(pm_angles, gamma):
                 m[i, j] = 0
                 while (abs(mnew - m[i, j]) > 0.00001):
                     m[i, j] = mnew
-                    fm = nu(m[i, j], gamma) - pm_angles[i, j]
+                    fm = prandtl_meyer(m[i, j], gamma) - pm_angles[i, j]
                     fdm = np.sqrt(m[i, j]**2 - 1) / (1 + 0.5 * (gamma - 1) * m[i, j] ** 2) / m[i, j]
                     mnew = m[i, j] - fm / fdm
                 m[i, j] = mnew
@@ -75,17 +75,17 @@ def calculate_mach_numbers(pm_angles, gamma):
         return m
 
 
-def nu(m, gamma):
-    """
-    compute prandtl meyer angles given by input mach numbers
+def prandtl_meyer(m, gamma):
+    """Compute Prandtl Meyer angles for given Mach #'s
 
-    input:
-        m - mach numbers
-        gamma - specific heat ratio
+    Real gas: https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19930085178.pdf
 
-    output:
-        n - prandtl meyer angles (radians)
+    :param <np.array> m: Mach # array
+    :param <float> gamma: Specific heat ratio
+
+    :return <np.array> pm: Prandtl-Meyer angles (radians)
     """
+
     return np.sqrt((gamma + 1) / (gamma - 1)) * np.arctan(np.sqrt((gamma - 1) / (gamma + 1) * (m**2 - 1))) - np.arctan(np.sqrt(m**2 - 1))
 
 
@@ -330,7 +330,7 @@ def moc_minimum_length_nozzle(mexit, throat_height, gamma, nwaves, plot_fig):
         nozzle_length - nozzle length
         nozzle_height - nozzle height at exit
     """
-    astart = nu(mexit, gamma) / 2  # expansion angle of wall downstream of throat
+    astart = prandtl_meyer(mexit, gamma) / 2  # expansion angle of wall downstream of throat
     ai_1 = [astart / nwaves / 1000, astart / nwaves /
             100, astart / nwaves / 10, astart / nwaves / 2]
     ai_2 = list(np.linspace(astart / (nwaves - 1), astart, nwaves))
