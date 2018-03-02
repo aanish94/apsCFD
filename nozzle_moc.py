@@ -1,76 +1,78 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Mar 07 21:12:53 2017
-
-@author: asikora
-"""
 
 import math
-from matplotlib.patches import Polygon
 import matplotlib.pyplot as plt
 import numpy as np
 
+from plot import plot_complex_region, plot_simple_region, plot_uniform_region
+from utils import intercept
 """
 Method of Characteristics implementation to design a nozzle for shock free flowflow
 """
 
 # Constants
-MAX_RGB = 255
-MIN_RGB = 0
 THROAT_MACH_NUM = 1
 
 
-def rgb(value, minimum=MIN_RGB, maximum=MAX_RGB):
-    """Calculate an RGB color scaled between the min and max limits to use in colormaps
+def calculate_mach_angles(mach_numbers):
+    """Calculate Mach wave angle. A Mach wave propagates across the flow at the
+    Mach angle, mu, which is the angle formed between the Mach wave wavefront and
+    a vector pointing opposite to thedirection of motion.
 
-    :param <float> value: Scaled value
-    :param <int> minimum: Minimum RGB value
-    :param <int> maximum: Maximum RGB value
+    :param <np.array> mach_numbers: Mach numbers
 
-    :return <str> hex: RGB values scaled between min/max and converted to HEX code
+    :return <np.array> mu: Mach angles
     """
-    # Convert to floats
-    minimum, maximum = float(minimum), float(maximum)
-
-    # Determine scale of value
-    ratio = 2 * (value - minimum) / (maximum - minimum)
-
-    # Calculate RGB accordingly
-    b = int(max(MIN_RGB, MAX_RGB * (1 - ratio)))
-    r = int(max(MIN_RGB, MAX_RGB * (ratio - 1)))
-    g = MAX_RGB - b - r
-
-    # Convert to HEX
-    hex_color = '#%02x%02x%02x' % (r, g, b)
-
-    return hex_color
+    
+    mach_angles = np.arcsin(1 / mach_numbers)
+    
+    return mach_angles
 
 
-def intercept(x1, y1, t1, x2, y2, t2):
-    """Calculate the intercept coordinates of two lines defined by an angle and start coordinates.
+def calculate_mach_numbers(pm_angles, gamma):
+    """Compute the Mach # given by a set of Prandtl-Meyer angles
 
-    :param <int> x1: Point A x-coordinate
-    :param <int> y1: Point A y-coordinate
-    :param <int> theta1: Point A angle
-    :param <int> x2: Point B x-coordinate
-    :param <int> y2: Point B y-coordinate
-    :param <int> theta2: Point B angle
+    :param <np.array> pm_angles: PM angles (radians)
+    :param <float> gamma: Specific heat ratio
 
-    :return <int> x: Intersection x-coordinate
-    :return <int> y: Intersection y-coordinate
+    :return <np.array> mach_numbers: Mach #'s
     """
+    # Track input type - Convert to 2-D array if not already
+    flag_1d = False
 
-    # Lines with the same angle do not intersect
-    if t2 == t1:
-        x = y = None
-    # Calculate intersection
+    # Input is a number
+    if isinstance(pm_angles, (int, float)):
+        pm_angles = np.matrix(pm_angles)
     else:
-        x = ((y1 - y2) * np.cos(t1) * np.cos(t2) + x2 * np.sin(t2) *
-             np.cos(t1) - x1 * np.sin(t1) * np.cos(t2)) / np.sin(t2 - t1)
-        y = ((x1 - x2) * np.sin(t1) * np.sin(t2) + y2 * np.cos(t2) *
-             np.sin(t1) - y1 * np.cos(t1) * np.sin(t2)) / np.sin(t1 - t2)
+        # Input is a 1-D array
+        if pm_angles.ndim == 1:
+            flag_1d = True
+            pm_angles = np.matrix(pm_angles).transpose()
+    
+    m = np.zeros(pm_angles.shape)
+    numax = (np.sqrt((gamma + 1) / (gamma - 1)) - 1) * np.pi / 2
 
-    return np.real(x), np.real(y)
+    for i in range(pm_angles.shape[0]):
+        for j in range(pm_angles.shape[1]):
+            if pm_angles[i, j] < 0 or pm_angles[i, j] > numax:
+                m[i, j] = np.nan
+            elif pm_angles[i, j] == 0:
+                m[i, j] = 1
+            else:
+                mnew = 2
+                m[i, j] = 0
+                while (abs(mnew - m[i, j]) > 0.00001):
+                    m[i, j] = mnew
+                    fm = nu(m[i, j], gamma) - pm_angles[i, j]
+                    fdm = np.sqrt(m[i, j]**2 - 1) / (1 + 0.5 * (gamma - 1) * m[i, j] ** 2) / m[i, j]
+                    mnew = m[i, j] - fm / fdm
+                m[i, j] = mnew
+
+    if flag_1d:
+        return np.squeeze(np.asarray(m))
+    else:
+        return m
 
 
 def nu(m, gamma):
@@ -85,42 +87,6 @@ def nu(m, gamma):
         n - prandtl meyer angles (radians)
     """
     return np.sqrt((gamma + 1) / (gamma - 1)) * np.arctan(np.sqrt((gamma - 1) / (gamma + 1) * (m**2 - 1))) - np.arctan(np.sqrt(m**2 - 1))
-
-
-def m_nu(n, gamma):
-    """
-    compute mach numbers given by set of prandtl meyer angles
-
-    input:
-        n - pm angles (radians)
-        gamma - specific heat ratio
-
-    output:
-        m - mach numbers
-    """
-    if isinstance(n, (int, float)):
-        n = np.array([n])
-
-    m = np.zeros(n.shape)
-    numax = (np.sqrt((gamma + 1) / (gamma - 1)) - 1) * np.pi / 2
-
-    for i in range(len(n)):
-        if n[i] < 0 or n[i] > numax:
-            m[i] = np.nan
-        elif n[i] == 0:
-            m[i] = 1
-        else:
-            mnew = 2
-            m[i] = 0
-            while (abs(mnew - m[i]) > 0.00001):
-                m[i] = mnew
-                fm = nu(m[i], gamma) - n[i]
-                fdm = np.sqrt(m[i]**2 - 1) / (1 + 0.5 *
-                                              (gamma - 1) * m[i] ** 2) / m[i]
-                mnew = m[i] - fm / fdm
-            m[i] = mnew
-
-    return m
 
 
 def complex_wave(thetai, pmi, xi, yi, bc, gamma):
@@ -150,12 +116,12 @@ def complex_wave(thetai, pmi, xi, yi, bc, gamma):
     :return <np.array> y: Y-coordinates along the outgoing wave boundary
     """
     # Calculate Mach # and angle
-    mach_numbersi = m_nu(pmi, gamma)
-    mach_anglesi = np.arcsin(1 / mach_numbersi)
+    mach_numbers_initial = calculate_mach_numbers(pmi, gamma)
+    mach_angles_initial = calculate_mach_angles(mach_numbers_initial)
 
     # Determine characteristic family i.e C- or C+
     slope = math.atan2(yi[1] - yi[0], xi[1] - xi[0]) - thetai[0]
-    if abs(slope - mach_anglesi[0]) < abs(slope + mach_anglesi[0]):
+    if abs(slope - mach_angles_initial[0]) < abs(slope + mach_angles_initial[0]):
         # C- characteristic
         c = -1
     else:  # C+ characteristic
@@ -173,7 +139,7 @@ def complex_wave(thetai, pmi, xi, yi, bc, gamma):
     pm[0, :] = pmi
     x[0, :] = xi
     y[0, :] = yi
-    mach_angles[0, :] = mach_anglesi
+    mach_angles[0, :] = mach_angles_initial
 
     # Iterate through each grid point
     for i in range(1, nwaves):
@@ -184,28 +150,22 @@ def complex_wave(thetai, pmi, xi, yi, bc, gamma):
                 theta[i, j] = bc
                 # Calculate prandtl-meyer and mach angle
                 pm[i, j] = pm[i - 1, j] + c * (theta[i, j] - theta[i - 1, j])
-                mach_angles[i, j] = np.arcsin(1 / m_nu(pm[i, j], gamma))
+                mach_angles[i, j] = calculate_mach_angles(calculate_mach_numbers(pm[i, j], gamma))
                 # Calculate coordinates
-                cur_angle = (theta[i - 1, j] + c * mach_angles[i - 1,
-                                                               j] + theta[i, j] + c * mach_angles[i, j]) / 2
+                cur_angle = (theta[i - 1, j] + c * mach_angles[i - 1,j] + theta[i, j] + c * mach_angles[i, j]) / 2
                 prev_angle = (theta[i - 1, j - 1] + theta[i, j]) / 2
-                x[i, j], y[i, j] = intercept(
-                    x[i - 1, j], y[i - 1, j], cur_angle, x[i - 1, j - 1], y[i - 1, j - 1], prev_angle)
+                x[i, j], y[i, j] = intercept(x[i - 1, j], y[i - 1, j], cur_angle, x[i - 1, j - 1], y[i - 1, j - 1], prev_angle)
 
             # Normal grid point
             else:
                 # Determine theta from previous point
-                theta[i, j] = 0.5 * (theta[i, j - 1] + theta[i - 1,
-                                                             j] + c * (pm[i, j - 1] - pm[i - 1, j]))
+                theta[i, j] = 0.5 * (theta[i, j - 1] + theta[i - 1,j] + c * (pm[i, j - 1] - pm[i - 1, j]))
                 pm[i, j] = pm[i, j - 1] + c * (theta[i, j - 1] - theta[i, j])
-                mach_angles[i, j] = np.arcsin(1 / m_nu(pm[i, j], gamma))
+                mach_angles[i, j] = calculate_mach_angles(calculate_mach_numbers(pm[i, j], gamma))
                 # Calculate coordinates
-                cur_angle = (theta[i, j - 1] - c * mach_angles[i,
-                                                               j - 1] + theta[i, j] - c * mach_angles[i, j]) / 2
-                prev_angle = (theta[i - 1, j] + c * mach_angles[i - 1,
-                                                                j] + theta[i, j] + c * mach_angles[i, j]) / 2
-                x[i, j], y[i, j] = intercept(
-                    x[i, j - 1], y[i, j - 1], cur_angle, x[i - 1, j], y[i - 1, j], prev_angle)
+                cur_angle = (theta[i, j - 1] - c * mach_angles[i,j - 1] + theta[i, j] - c * mach_angles[i, j]) / 2
+                prev_angle = (theta[i - 1, j] + c * mach_angles[i - 1,j] + theta[i, j] + c * mach_angles[i, j]) / 2
+                x[i, j], y[i, j] = intercept(x[i, j - 1], y[i, j - 1], cur_angle, x[i - 1, j], y[i - 1, j], prev_angle)
 
     return theta, pm, x, y
 
@@ -255,14 +215,12 @@ def simple_wave(thetai, pmi, xi, yi, leading_length, gamma):
     theta[:, :] = thetai
 
     # Calculate Mach # and angle
-    mach_numbers = m_nu(pmi, gamma)
-    mach_angles = np.arcsin(1 / mach_numbers)
+    mach_numbers = calculate_mach_numbers(pmi, gamma)
+    mach_angles = calculate_mach_angles(mach_numbers)
 
     # Calculate coordinates of 1st centerline point
-    x[1, 0] = xi[0] + leading_length * \
-        np.cos(thetai[0] + characteristic_family * mach_angles[0])
-    y[1, 0] = yi[0] + leading_length * \
-        np.sin(thetai[0] + characteristic_family * mach_angles[0])
+    x[1, 0] = xi[0] + leading_length * np.cos(thetai[0] + characteristic_family * mach_angles[0])
+    y[1, 0] = yi[0] + leading_length * np.sin(thetai[0] + characteristic_family * mach_angles[0])
 
     x = np.real(x)
     y = np.real(y)
@@ -271,11 +229,9 @@ def simple_wave(thetai, pmi, xi, yi, leading_length, gamma):
     for j in range(1, nwaves):
         # Find the current and previous point angles
         cur_angle = thetai[j] + characteristic_family * mach_angles[j]
-        prev_angle = (thetai[j - 1] + thetai[j] - characteristic_family *
-                      (mach_angles[j - 1] + mach_angles[j])) / 2
+        prev_angle = (thetai[j - 1] + thetai[j] - characteristic_family * (mach_angles[j - 1] + mach_angles[j])) / 2
         # Determine the intersection point
-        x[1, j], y[1, j] = intercept(xi[j], yi[j], cur_angle, x[
-                                     1, j - 1], y[1, j - 1], prev_angle)
+        x[1, j], y[1, j] = intercept(xi[j], yi[j], cur_angle, x[1, j - 1], y[1, j - 1], prev_angle)
 
     return theta, pm, x, y
 
@@ -323,12 +279,11 @@ def simple_wave_boundary(thetai, pmi, xi, yi, c, a0, x0, y0, gamma):
     theta[:, :] = thetai
 
     # Calculate Mach # and angle
-    mach_numbers = m_nu(pmi, gamma)
-    mach_angles = np.arcsin(1 / mach_numbers)
+    mach_numbers = calculate_mach_numbers(pmi, gamma)
+    mach_angles = calculate_mach_angles(mach_numbers)
 
     # Calculate coordinates of 1st point
-    x[1, 0], y[1, 0] = intercept(
-        xi[0], yi[0], thetai[0] + c * mach_angles[0], x0, y0, (a0 + thetai[0]) / 2)
+    x[1, 0], y[1, 0] = intercept(xi[0], yi[0], thetai[0] + c * mach_angles[0], x0, y0, (a0 + thetai[0]) / 2)
 
     # Calculate coordinates of all other points
     for j in range(1, nwaves):
@@ -336,160 +291,9 @@ def simple_wave_boundary(thetai, pmi, xi, yi, c, a0, x0, y0, gamma):
         cur_angle = thetai[j] + c * mach_angles[j]
         prev_angle = (thetai[j - 1] + thetai[j]) / 2
         # Determine the intersection point
-        x[1, j], y[1, j] = intercept(xi[j], yi[j], cur_angle, x[
-                                     1, j - 1], y[1, j - 1], prev_angle)
+        x[1, j], y[1, j] = intercept(xi[j], yi[j], cur_angle, x[1, j - 1], y[1, j - 1], prev_angle)
 
     return theta, pm, x, y
-
-
-def calculate_color_scale(values, scale_min, scale_max):
-    """Determine color based on input scale
-
-    :param <list> values: List of values to scale
-    :param <float> scale_min: Minimum scale value
-    :param <float> scale_max: Maximum scale value
-
-    :return <str> hex_color: HEX color code
-    """
-
-    # Scale number
-    color = np.round(1 + MAX_RGB * (np.mean(values) -
-                                    scale_min) / (scale_max - scale_min))
-
-    # Handle too low/high
-    if color < MIN_RGB:
-        color = MIN_RGB
-    elif color > MAX_RGB:
-        color = MAX_RGB
-
-    # Convert to HEX
-    hex_color = rgb(color)
-
-    return hex_color
-
-
-def plot_polygon(ax, x, y, facecolor, edgecolor='black'):
-    """Plot a polygon given array of x & coordinates
-
-    :param <matplotlib.AxesSubplot> ax: Axis handle
-    :param <np.array> x: X-coordinates
-    :param <np.array> y: Y-coordinates
-    :param <np.array> facecolor: Polygon face color
-    :param <np.array> edgecolor: Polygon border color
-    """
-
-    poly = Polygon(np.c_[x, y], closed=True,
-                   edgecolor=edgecolor, facecolor=facecolor)
-    ax.add_patch(poly)
-
-    return
-
-
-def plot_complex_region(ax, theta, pm, x, y, gamma, cl, ch):
-    """Plot Mach # contours for a complex wave region
-
-    :param <matplotlib.AxesSubplot> ax: Axis handle
-    :param <np.array> theta: Flow angles measured from the x-axis (radians)
-    :param <np.array> pm: Prandtl-Meyer angles (radians)
-    :param <np.array> x: X-coordinates along the outgoing wave boundary
-    :param <np.array> y: Y-coordinates along the outgoing wave boundary
-    :param <float> gamma: Specific heat ratio
-    :param <float> cl: Minimum Mach #
-    :param <float> ch: Maximum Mach #
-    """
-
-    # Count the number of waves
-    nwaves = theta.shape[1]
-
-    # Calculate Mach # from PM angles
-    m = np.zeros(pm.shape)
-    for i in range(len(pm)):
-        m[i, :] = m_nu(pm[i, :], gamma)
-
-    # Iterate through each grid point
-    for i in range(1, nwaves):
-        for j in range(i, nwaves):
-            # Check if point is on the wall
-            if i == j:
-                xp = (x[i, j], x[i - 1, j - 1], x[i - 1, j])
-                yp = (y[i, j], y[i - 1, j - 1], y[i - 1, j])
-
-                # Use Mach # to determine color scale
-                color = calculate_color_scale(
-                    [m[i, j], m[i - 1, j - 1], m[i - 1, j]], cl, ch)
-            # Normal grid point
-            else:
-                xp = (x[i, j], x[i, j - 1], x[i - 1, j - 1], x[i - 1, j])
-                yp = (y[i, j], y[i, j - 1], y[i - 1, j - 1], y[i - 1, j])
-                # Use Mach # to determine color scale
-                color = calculate_color_scale(
-                    [m[i, j], m[i, j - 1], m[i - 1, j - 1], m[i - 1, j]], cl, ch)
-
-            plot_polygon(ax, xp, yp, color)
-
-    return
-
-
-def plot_simple_region(ax, theta, pm, x, y, gamma, cl, ch):
-    """Plot Mach # contours for a simple wave region
-
-    :param <matplotlib.AxesSubplot> ax: Axis handle
-    :param <np.array> theta: Flow angles measured from the x-axis (radians)
-    :param <np.array> pm: Prandtl-Meyer angles (radians)
-    :param <np.array> x: X-coordinates along the outgoing wave boundary
-    :param <np.array> y: Y-coordinates along the outgoing wave boundary
-    :param <float> gamma: Specific heat ratio
-    :param <float> cl: Minimum Mach #
-    :param <float> ch: Maximum Mach #
-    """
-
-    # Count the number of waves
-    nwaves = theta.shape[1]
-
-    # Calculate Mach # from PM angles
-    m = np.zeros(pm.shape)
-    for i in range(len(pm)):
-        m[i, :] = m_nu(pm[i, :], gamma)
-
-    # Iterate through each wave
-    for j in range(1, nwaves):
-        # Define x & y coordinates of wave region
-        xp = (x[1, j], x[1, j - 1], x[0, j - 1], x[0, j])
-        yp = (y[1, j], y[1, j - 1], y[0, j - 1], y[0, j])
-
-        # Use Mach # to determine color scale
-        color = calculate_color_scale(
-            [m[1, j], m[1, j - 1], m[0, j - 1], m[0, j]], cl, ch)
-
-        # Plot polygon
-        plot_polygon(ax, xp, yp, color)
-
-    return
-
-
-def plot_uniform_region(ax, theta, pm, x, y, gamma, cl, ch):
-    """Plot Mach # contours for a uniform wave region
-
-    :param <matplotlib.AxesSubplot> ax: Axis handle
-    :param <np.array> theta: Flow angles measured from the x-axis (radians)
-    :param <np.array> pm: Prandtl-Meyer angles (radians)
-    :param <np.array> x: X-coordinates along the outgoing wave boundary
-    :param <np.array> y: Y-coordinates along the outgoing wave boundary
-    :param <float> gamma: Specific heat ratio
-    :param <float> cl: Minimum Mach #
-    :param <float> ch: Maximum Mach #
-    """
-
-    # Calculate Mach # from flow angles
-    m = np.zeros(pm.shape)
-    for i in range(len(pm)):
-        m[i, :] = m_nu(pm[i, :], gamma)
-
-    # Determine color and plot polygon
-    color = calculate_color_scale(m[:], cl, ch)
-    plot_polygon(ax, x, y, color)
-
-    return
 
 
 def moc_minimum_length_nozzle(mexit, throat_height, gamma, nwaves, plot_fig):
@@ -526,8 +330,7 @@ def moc_minimum_length_nozzle(mexit, throat_height, gamma, nwaves, plot_fig):
         nozzle_length - nozzle length
         nozzle_height - nozzle height at exit
     """
-    astart = nu(mexit, gamma) / \
-        2  # expansion angle of wall downstream of throat
+    astart = nu(mexit, gamma) / 2  # expansion angle of wall downstream of throat
     ai_1 = [astart / nwaves / 1000, astart / nwaves /
             100, astart / nwaves / 10, astart / nwaves / 2]
     ai_2 = list(np.linspace(astart / (nwaves - 1), astart, nwaves))
@@ -537,36 +340,45 @@ def moc_minimum_length_nozzle(mexit, throat_height, gamma, nwaves, plot_fig):
     yi = np.ones(ai.shape) * throat_height
     ni = ai.copy()
     le = -throat_height
-    mmax = m_nu(max(ai) * 2, gamma)
 
     cl = 1  # throat mach number
-    ch = mmax
+    ch = mexit
 
     # Simple Wave Region
     a1, n1, x1, y1 = simple_wave(ai, ni, xi, yi, le, gamma)
     # Complex Wave Reflection
-    a2, n2, x2, y2 = complex_wave(
-        a1[-1, :], n1[-1, :], x1[-1, :], y1[-1, :], 0, gamma)
+    a2, n2, x2, y2 = complex_wave(a1[-1, :], n1[-1, :], x1[-1, :], y1[-1, :], 0, gamma)
     # simple wave boundary
-    a3, n3, x3, y3 = simple_wave_boundary(
-        a2[:, -1], n2[:, -1], x2[:, -1], y2[:, -1], 1, ai[-1], xi[-1], yi[-1],  gamma)
+    a3, n3, x3, y3 = simple_wave_boundary(a2[:, -1], n2[:, -1], x2[:, -1], y2[:, -1], 1, ai[-1], xi[-1], yi[-1],  gamma)
 
     # plot solution
     if plot_fig:
         fig, ax = plt.subplots(figsize=(12, 9))
 
-        plot_simple_region(ax, a1, n1, x1, y1, gamma,
-                           cl, ch)  # Initial wave front
-        plot_complex_region(ax, a2, n2, x2, y2, gamma, cl,
-                            ch)  # Reflection from wall
-        plot_simple_region(ax, a3, n3, x3, y3, gamma, cl, ch)
+        m1 = calculate_mach_numbers(n1, gamma)
+        plot_simple_region(ax, a1, m1, x1, y1, gamma, cl, ch)  # Initial wave front
+        
+        m2 = calculate_mach_numbers(n2, gamma)                         
+        plot_complex_region(ax, a2, m2, x2, y2, gamma, cl, ch)  # Reflection from wall
+        
+        m3 = calculate_mach_numbers(n3, gamma)                           
+        plot_simple_region(ax, a3, m3, x3, y3, gamma, cl, ch)
 
         # Region between 1st simple region and complex region
-        plot_uniform_region(ax, np.array([[a1[0, -1], a1[1, -1], a3[1, 0]]]), np.array([[n1[0, -1], n1[1, -1], n3[1, 0]]]), np.array(
-            [x1[0, -1], x1[1, -1], x3[1, 0]]), np.array([y1[0, -1],  y1[1, -1], y3[1, 0]]), gamma, cl, ch)
-        # plot_uniform_region(ax, np.array([[a1[0, 0], a1[1, 0], 0]]), np.array([[n1[0, 0], n1[1, 0], 0]]), np.array([x1[0, 0], x1[1, 0], x1[0, 0]]), np.array([y1[0, 0],  y1[1, 0], y1[1, 0]]), gamma, cl, ch)
-        plot_uniform_region(ax, np.array([[a3[0, -1], a3[1, -1], a3[0, -1]]]), np.array([[n3[0, -1], n3[1, -1], n3[0, -1]]]), np.array(
-            [x3[0, -1], x3[1, -1], x3[1, -1]]), np.array([y3[0, -1],  y3[1, -1], y3[0, -1]]), gamma, cl, ch)
+        theta_uniform_1 = np.array([[a1[0, -1], a1[1, -1], a3[1, 0]]])
+        pm_uniform_1 = np.array([[n1[0, -1], n1[1, -1], n3[1, 0]]])
+        m_uniform_1 = calculate_mach_numbers(pm_uniform_1, gamma)
+        x_uniform_1 = np.array([x1[0, -1], x1[1, -1], x3[1, 0]])
+        y_uniform_1 = np.array([y1[0, -1],  y1[1, -1], y3[1, 0]])
+        plot_uniform_region(ax, theta_uniform_1, m_uniform_1, x_uniform_1, y_uniform_1, gamma, cl, ch)
+
+        # Region between complex region and exit
+        theta_uniform_2 = np.array([[a3[0, -1], a3[1, -1], a3[0, -1]]])
+        pm_uniform_2 = np.array([[n3[0, -1], n3[1, -1], n3[0, -1]]])
+        m_uniform_2 = calculate_mach_numbers(pm_uniform_2, gamma)
+        x_uniform_2 = np.array([x3[0, -1], x3[1, -1], x3[1, -1]])
+        y_uniform_2 = np.array([y3[0, -1],  y3[1, -1], y3[0, -1]])
+        plot_uniform_region(ax, theta_uniform_2, m_uniform_2, x_uniform_2, y_uniform_2, gamma, cl, ch)
 
         # Format the figure
         plt.autoscale(axis='both', tight=False)
@@ -580,7 +392,7 @@ def moc_minimum_length_nozzle(mexit, throat_height, gamma, nwaves, plot_fig):
     # Nozzle Design Summary
     nozzle_length = x3[-1, -1]
     nozzle_height = y3[-1, -1]
-    mach_number_exit = m_nu(n3[-1, :], gamma)[-1]
+    mach_number_exit = calculate_mach_numbers(n3[-1, :], gamma)[-1]
 
     print("nozzle length: {} [m]".format(nozzle_length))
     print("nozzle height: {} [m]".format(nozzle_height / throat_height))
