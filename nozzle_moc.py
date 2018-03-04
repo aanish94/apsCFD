@@ -150,7 +150,8 @@ def complex_wave(thetai, pmi, xi, yi, bc, gamma):
                 theta[i, j] = bc
                 # Calculate prandtl-meyer and mach angle
                 pm[i, j] = pm[i - 1, j] + c * (theta[i, j] - theta[i - 1, j])
-                mach_angles[i, j] = calculate_mach_angles(calculate_mach_numbers(pm[i, j], gamma))
+                mach_numbers = calculate_mach_numbers(pm[i, j], gamma)
+                mach_angles[i, j] = calculate_mach_angles(mach_numbers)
                 # Calculate coordinates
                 cur_angle = (theta[i - 1, j] + c * mach_angles[i - 1,j] + theta[i, j] + c * mach_angles[i, j]) / 2
                 prev_angle = (theta[i - 1, j - 1] + theta[i, j]) / 2
@@ -161,7 +162,8 @@ def complex_wave(thetai, pmi, xi, yi, bc, gamma):
                 # Determine theta from previous point
                 theta[i, j] = 0.5 * (theta[i, j - 1] + theta[i - 1,j] + c * (pm[i, j - 1] - pm[i - 1, j]))
                 pm[i, j] = pm[i, j - 1] + c * (theta[i, j - 1] - theta[i, j])
-                mach_angles[i, j] = calculate_mach_angles(calculate_mach_numbers(pm[i, j], gamma))
+                mach_numbers = calculate_mach_numbers(pm[i, j], gamma)
+                mach_angles[i, j] = calculate_mach_angles(mach_numbers)
                 # Calculate coordinates
                 cur_angle = (theta[i, j - 1] - c * mach_angles[i,j - 1] + theta[i, j] - c * mach_angles[i, j]) / 2
                 prev_angle = (theta[i - 1, j] + c * mach_angles[i - 1,j] + theta[i, j] + c * mach_angles[i, j]) / 2
