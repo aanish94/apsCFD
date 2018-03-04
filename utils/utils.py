@@ -15,33 +15,6 @@ MIN_RGB = 0
 THROAT_MACH_NUM = 1
 
 
-def intercept(x1, y1, t1, x2, y2, t2):
-    """Calculate the intercept coordinates of two lines defined by an angle and start coordinates.
-
-    :param <int> x1: Point A x-coordinate
-    :param <int> y1: Point A y-coordinate
-    :param <int> theta1: Point A angle
-    :param <int> x2: Point B x-coordinate
-    :param <int> y2: Point B y-coordinate
-    :param <int> theta2: Point B angle
-
-    :return <int> x: Intersection x-coordinate
-    :return <int> y: Intersection y-coordinate
-    """
-
-    # Lines with the same angle do not intersect
-    if t2 == t1:
-        x = y = None
-    # Calculate intersection
-    else:
-        x = ((y1 - y2) * np.cos(t1) * np.cos(t2) + x2 * np.sin(t2) *
-             np.cos(t1) - x1 * np.sin(t1) * np.cos(t2)) / np.sin(t2 - t1)
-        y = ((x1 - x2) * np.sin(t1) * np.sin(t2) + y2 * np.cos(t2) *
-             np.sin(t1) - y1 * np.cos(t1) * np.sin(t2)) / np.sin(t1 - t2)
-
-    return np.real(x), np.real(y)
-
-
 def calculate_color(value, minimum=MIN_RGB, maximum=MAX_RGB):
     """Calculate an RGB color scaled between the min and max limits to use in colormaps
 
@@ -92,3 +65,42 @@ def calculate_color_scale(values, scale_min, scale_max):
     hex_color = calculate_color(color)
 
     return hex_color
+
+
+def deg_to_rad(d):
+    """Degrees to radians
+    """
+    return d / 180.0 * math.pi
+
+
+def rad_to_deg(r):
+    """Radians to degrees
+    """
+    return r * 180.0 / math.pi
+
+
+def intercept(x1, y1, t1, x2, y2, t2):
+    """Calculate the intercept coordinates of two lines defined by an angle and start coordinates.
+
+    :param <int> x1: Point A x-coordinate
+    :param <int> y1: Point A y-coordinate
+    :param <int> theta1: Point A angle
+    :param <int> x2: Point B x-coordinate
+    :param <int> y2: Point B y-coordinate
+    :param <int> theta2: Point B angle
+
+    :return <int> x: Intersection x-coordinate
+    :return <int> y: Intersection y-coordinate
+    """
+
+    # Lines with the same angle do not intersect
+    if t2 == t1:
+        x = y = None
+    # Calculate intersection
+    else:
+        x = ((y1 - y2) * np.cos(t1) * np.cos(t2) + x2 * np.sin(t2) *
+             np.cos(t1) - x1 * np.sin(t1) * np.cos(t2)) / np.sin(t2 - t1)
+        y = ((x1 - x2) * np.sin(t1) * np.sin(t2) + y2 * np.cos(t2) *
+             np.sin(t1) - y1 * np.cos(t1) * np.sin(t2)) / np.sin(t1 - t2)
+
+    return np.real(x), np.real(y)

@@ -8,6 +8,22 @@ Note:
 """
 
 import math
+from scipy import optimize
+
+
+def mach(T0T0star, gamma):
+    """Static pressure ratio for flow with heat addition (eq. 3.85)
+
+    :param <float> T0T0star: Total temperature ratio T0/T0star
+    :param <float> gamma: Specific heat ratio
+
+    :return <float> M: Initial Mach #
+    """
+
+    def f_to_solve(M):
+        return T0_T0star(M, gamma) - T0T0star
+
+    return optimize.newton(f_to_solve, 2.5)
 
 
 def p_pstar(M, gamma):
@@ -37,7 +53,7 @@ def p0_p0star(M, gamma):
     return (1.0 + gamma) / (1.0 + gamma * M ** 2) * t1 * t2
 
 
-def r_rstar(M, gamma):
+def rho_rhostar(M, gamma):
     """Static density ratio for flow with heat addition (eq. 3.87)
 
     :param <float> M: Initial Mach #
@@ -49,7 +65,7 @@ def r_rstar(M, gamma):
     return 1.0 / M ** 2 / (1.0 + gamma) * (1.0 + gamma * M ** 2)
 
 
-def t_tstar(M, gamma):
+def T_Tstar(M, gamma):
     """Static temperature ratio for flow with heat addition (eq. 3.86)
 
     :param <float> M: Initial Mach #
@@ -61,7 +77,7 @@ def t_tstar(M, gamma):
     return M ** 2  * ((1.0 + gamma) / (1.0 + gamma * M ** 2)) ** 2
 
 
-def t0_t0star(M, gamma):
+def T0_T0star(M, gamma):
     """Total temperature ratio for flow with heat addition (eq. 3.89)
 
     :param <float> M: Initial Mach #

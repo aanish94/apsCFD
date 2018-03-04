@@ -23,7 +23,7 @@ def A_Astar(M, gamma):
     return math.sqrt(t2)
 
 
-def p0_T(M, gamma):
+def p0_p(M, gamma):
     """Ratio of total to static pressure for isentropic flow (eq. 3.30)
 
     :param <float> M: Mach # at area A
@@ -35,7 +35,7 @@ def p0_T(M, gamma):
     return (T0_T(M, gamma)) ** (gamma / (gamma - 1.0))
 
 
-def r0_T(M, gamma):
+def r0_r(M, gamma):
     """Ratio of stagnation to free-stream density for isentropic flow (eq. 3.31)
 
     :param <float> M: Mach # at area A

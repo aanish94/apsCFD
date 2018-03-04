@@ -12,11 +12,11 @@ import math
 from scipy import optimize
 
 
-def beta(M, theta, gamma):
+def beta(M, theta_in, gamma):
     """Oblique shock wave angle
 
     :param <float> M: Mach # upstream
-    :param <float> theta: Flow deflection angle (radians)
+    :param <float> theta_in: Flow deflection angle (radians)
     :param <float> gamma: Specific heat ratio
 
     :return <float> Shock angle w.r.t initial flow direction (radians)
@@ -26,7 +26,7 @@ def beta(M, theta, gamma):
     b1 = math.asin(1.0 / M)
 
     def f_to_solve(beta):
-        return theta(M, beta, gamma) - theta
+        return theta(M, beta, gamma) - theta_in
 
     return optimize.newton(f_to_solve, x0=b1)
 
@@ -85,7 +85,7 @@ def p02_p01(M, beta, gamma):
     return t1 ** (1.0 / (gamma - 1.0)) * t2 ** (gamma / (gamma - 1.0))
 
 
-def r2_r1(M, beta, gamma):
+def rho2_rho1(M, beta, gamma):
     """Density ratio across an olique shock (eq. 4.8)
 
     :param <float> M: Mach # upstream
@@ -121,7 +121,7 @@ def theta(M, beta, gamma):
     return math.atan(t1 / t2)
 
 
-def t2_t1(M, beta, gamma):
+def T2_T1(M, beta, gamma):
     """Temperature ratio across an olique shock (eq. 4.11)
 
     :param <float> M: Mach # upstream
@@ -131,7 +131,7 @@ def t2_t1(M, beta, gamma):
     :return <float> Pressure ratio T2/T1
     """
 
-    return p2_p1(M, beta, gamma) / r2_r1(M, beta, gamma)
+    return p2_p1(M, beta, gamma) / rho2_rho1(M, beta, gamma)
 
 
 def u2_u1(M, beta, gamma):
@@ -144,6 +144,6 @@ def u2_u1(M, beta, gamma):
     :return <float> Velocity ratio u2/u1
     """
 
-    t1 = math.sqrt((math.sin(beta) / r2_r1(M, beta, gamma)) ** 2 + (math.cos(beta)) ** 2)
+    t1 = math.sqrt((math.sin(beta) / rho2_rho1(M, beta, gamma)) ** 2 + (math.cos(beta)) ** 2)
 
     return t1

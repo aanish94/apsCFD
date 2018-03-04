@@ -31,16 +31,16 @@ def nu(M , gamma):
     return nu
 
 
-def mach_from_nu(nu , gamma):
+def mach_from_nu(nu_in, gamma):
     """Invert the Prandtl-Meyer function (eq. 4.44)
 
-    :param <float> Prandtl-Meyer function (radians)
+    :param <float> nu_in: Prandtl-Meyer function (radians)
     :param <float> gamma: Specific heat ratio
 
     :return <float> M: Mach #
     """
 
     def f_to_solve(M):
-        return prandtl_meyer(M, gamma)
+        return nu(M, gamma) - nu_in
 
     return optimize.newton(f_to_solve, x0=2.0)

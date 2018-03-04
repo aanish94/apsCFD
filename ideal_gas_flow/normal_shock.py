@@ -58,13 +58,13 @@ def rho2_rho1(M1, gamma):
     :return <float> Density ratio r2/r1
     """
 
-    n1 = (g + 1.0) * M1 ** 2
-    d1 = 2.0 + (g - 1.0) * M1 ** 2
+    n1 = (gamma + 1.0) * M1 ** 2
+    d1 = 2.0 + (gamma - 1.0) * M1 ** 2
 
     return n1 / d1
 
 
-def t2_t1(M1, gamma):
+def T2_T1(M1, gamma):
     """Temperature ratio across a normal shock (eq. 3.59)
 
     :param <float> M1: Mach # before the shock
@@ -73,7 +73,7 @@ def t2_t1(M1, gamma):
     :return <float> Temperature ratio T2/T1
     """
 
-    return shock_pressure(M1, gamma) / shock_density(M1, gamma)
+    return p2_p1(M1, gamma) / rho2_rho1(M1, gamma)
 
 
 def u2_u1(M1, gamma):
@@ -85,4 +85,4 @@ def u2_u1(M1, gamma):
     :return <float> Velocity ratio u2/u1
     """
 
-    return 1 / shock_rho(M1, gamma)
+    return 1 / rho2_rho1(M1, gamma)

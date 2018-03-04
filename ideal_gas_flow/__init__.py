@@ -10,4 +10,6 @@
     - 1D flow with friction (Fanno)
     - Prandtl-Meyer functions
     - Oblique shock relations
+
+Equations are referenced from "Modern Compressible Flow" 3rd Edition by John D. Anderson
 """
