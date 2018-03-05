@@ -5,6 +5,7 @@
 """
 
 import math
+from scipy import optimize
 
 
 def A_Astar(M, gamma):
@@ -21,6 +22,36 @@ def A_Astar(M, gamma):
     t2 = 1.0 / m2 * (2.0 / (gamma + 1.0) * (1.0 +(gamma - 1.0) * 0.5 * m2)) ** t1
 
     return math.sqrt(t2)
+
+
+def mach_angle(M):
+    """Calculate the Mach angle
+
+    :param <float> M: Mach #
+
+    :return <float> Mach angle, mu
+    """
+
+    return math.asin(1 / M)
+
+
+def mach_from_area_ratio(A_Astar_in, gamma):
+    """Invert the area-Mach # relation for isentropic, quasi-1D flow (eq. 5.20)
+
+    :param <float> A_Astar_in: Area ratio A:A_star
+    :param <float> gamma: Specific heat ratio
+
+    :return <float> M_sub: Subsonic Mach # at area A
+    :return <float> M_super: Supersonic Mach # at area A    
+    """
+
+    def f_to_solve(M):
+        return A_Astar(M, gamma) - A_Astar_in
+
+    M_sub = optimize.bisect(f_to_solve, 0.01, 1.0)
+    M_super = optimize.newton(f_to_solve, x0=2.0)
+
+    return M_sub, M_super
 
 
 def p0_p(M, gamma):

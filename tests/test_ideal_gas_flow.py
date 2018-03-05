@@ -27,6 +27,9 @@ class TestIdealGasFlow(unittest.TestCase):
         self.assertAlmostEqual(isentropic.p0_p(M, gamma), 7.824, places=2)
         self.assertAlmostEqual(isentropic.r0_r(M, gamma), 4.347, places=2)
 
+        # Inverse calculation
+        self.assertAlmostEqual(isentropic.mach_from_area_ratio(1.687, gamma)[1], 2.0, places=2)
+
     def test_normal_shock(self):
         """Test Normal Shock Relations
         """
