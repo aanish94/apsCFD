@@ -15,7 +15,9 @@ The geometry defines the physical domain over which the conservation laws will
 be applied. For simplicity, this project requires the a geometry that is symmetrical
 about the y-axis. The geometry is input via a piecewise-defined function.
 
-TODO: Adapt Method of Characteristics Code for a perfect-gas for a real gas
+## Method of Characteristics ##
+
+![MOC Example](examples/moc_nozzle.png)
 
 - [Concepts of Gasdynamics](https://www.aoe.vt.edu/content/dam/aoe_vt_edu/programs/graduate/forms/lectnotes3-09All101812.pdf)
 - [MatLab Documentation](https://www.mathworks.com/help/aerotbx/examples/solving-for-the-exit-flow-of-a-supersonic-nozzle.html)

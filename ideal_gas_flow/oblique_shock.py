@@ -113,6 +113,10 @@ def theta(M, beta, gamma):
     :return <float> Flow deflection angle (radians)
     """
 
+    # Handle extreme limits
+    if beta == math.asin(1 / M) or beta == math.pi / 2:
+        return 0
+
     m1sb = M * math.sin(beta)
 
     t1 = 2.0 / math.tan(beta) * (m1sb ** 2 - 1.0)

@@ -8,27 +8,6 @@ Created on Wed Feb 28 17:32:36 2018
 import math
 import numpy as np
 
-#from fluid import Fluid
-#
-#MEDIUM = Fluid(['Air'])
-#
-#def calculate_stagnation_h_s(T0, P0):
-#    """
-#    Calculate stagnation enthalpy and entropy from stagnation temperature and pressure
-#    """
-#    h0 = MEDIUM.enthalpy(T0, P0)
-#    s0 = MEDIUM.entropy(T0, P0)
-#    
-#    return h0, s0
-
-#
-#def speed_of_sound_from_h_s(h, s):
-#    """
-#    Calculate speed of sound from enthalpy and entropy
-#    """
-#    
-#    return MEDIUM.custom('A', 'H', h, 'S', s)
-
 import cantera as ct
 
 
@@ -84,90 +63,25 @@ def m_nu(n, gamma):
 def degrees_to_radians(deg):
     return deg * math.pi / 180
 
-    
-def prandtl_meyer(M, dtheta):
-    """Calculate the resultant Mach number from input Mach number and expansion fan angle
-    """
-    
-    gamma = 1.4
-    
-    nu_M = nu(M, gamma)
-    
-    nu_M2 = nu_M + dtheta
-    
-    M2 = m_nu(nu_M2, gamma)
-    
-    return M2[0]
-    
 
 def enthalpy_from_h_stag_u(h0, u):
     """Calculate enthalpy from stagnation enthalpy and velocity
     """
     
     return h0 - 0.5 * (u ** 2)
-    
-
-def prandtl_meyer_real_gas(gas, u1, h0, s0, dtheta):
-    """
-    Calculate velocity and speed of sound behind an expansion fan of angle dtheta
-    """
-    
-    # Calculate enthalpy, entropy and speed of sound before the expansion
-    h1 = enthalpy_from_h_stag_u(h0, u1)
-    s1 = s0  # isentropic
-
-    # print h1, s1
-    a1 = equilSoundSpeeds(gas, h1)
-    print a1
-    print 'Mach Number: {}'.format(u1 / a1)
-    # Guess velocity after the expansion based on perfect gas result
-    u2 = 1300 # prandtl_meyer(u1 / a1, dtheta) * a1
-    print u2
-
-    # Calculate enthalpy and entropy based off this velocity
-    h2 = enthalpy_from_h_stag_u(h0, u2)
-    # print h2
-    s2 = s0
-
-    a2 = equilSoundSpeeds(gas, h2)
-    # a2 = speed_of_sound_from_h_s(h2, s2)
-
-    # print a2
-    # return
-    
-    # return
-    def I(v, a):
-        v = float(v)
-        a = float(a)
-        
-        return ((1 / v) * math.sqrt(v ** 2 / a ** 2 - 1))    
-
-    N = 6
-
-    dtheta_numerical = 0.5 * I(u1, a1)    
-    for i in range(N):
-        ui = u1 + i * (u2 - u1) / (N + 1)
-        hi = h1 + 0.5 * (u1 ** 2) - 0.5 * (ui ** 2)
-        si = s1
-        # ai = speed_of_sound_from_h_s(hi, si)
-        ai = equilSoundSpeeds(gas, hi)
-
-        dtheta_numerical += (I(ui, ai) - I(u2, a2))
-
-    print 'Numerical: {}'.format(dtheta_numerical)
-    print 'Error: {}'.format(dtheta - dtheta_numerical)
-    
-    return
 
 
-def equilSoundSpeeds(gas, h, rtol=1.0e-6, maxiter=5000):
+def equilSoundSpeeds(gas, h=None, rtol=1.0e-6, maxiter=5000):
     """
     www.cantera.org/docs/sphinx/html/cython/examples/thermo_sound_speed.html
     """
     
-    gas.HP = h, gas.P
-    gas.equilibrate('TP', rtol=rtol, maxiter=maxiter)
-    
+    if h:
+        gas.HP = h, gas.P
+        gas.equilibrate('HP', rtol=rtol, maxiter=maxiter)
+    else:
+        gas.equilibrate('TP', rtol=rtol, maxiter=maxiter)
+
     s0 = gas.s
     p0 = gas.P
     r0 = gas.density
@@ -179,27 +93,114 @@ def equilSoundSpeeds(gas, h, rtol=1.0e-6, maxiter=5000):
     
     a_equil = math.sqrt((p1 - p0) / (gas.density - r0))
     
-    # gamma = gas.cp / gas.cv
-    # a_frozen = math.sqrt(gamma * ct.gas_constant * gas.T / gas.mean_molecular_weight)
+#    gamma = gas.cp / gas.cv
+#    a_frozen = math.sqrt(gamma * ct.gas_constant * gas.T / gas.mean_molecular_weight)
     
     # print a_equil
     # print a_frozen
 
-    return a_equil
+    return a_equil# , a_frozen
+#    return a_frozen
+
+
+def eta(gas):
+    
+    gamma = gas.cp / gas.cv
+    eta_frozen = (1.0 + gamma) / (gamma - 1.0)
+    
+    h = gas.h
+    a, _ = equilSoundSpeeds(gas)
+    eta_equil = 1 + 2 * h / (a ** 2)
+    
+    return eta_equil, eta_frozen
+    
+
+#def main(gas, h, M0, dtheta):
+#    
+#    # Get speed of sound
+#    a, _ = equilSoundSpeeds(gas, h)
+#    
+#    u = M0 * a
+#
+#    eta = 1 + 2 * h / (a ** 2)
+#    v_theta = a
+#    v_r = math.sqrt(u ** 2 - a ** 2)
+#    c = math.sqrt(2 * (h + (v_theta ** 2 + v_r ** 2)/2))
+#    
+#    phi = math.acos(a * math.sqrt(eta) / c)
+#    # print(a, eta, c)
+#    phi = 1
+#    
+#    M = math.sqrt(1 + eta * math.tan(phi) ** 2)
+#    
+#    nu = dtheta - math.acos(1 / M)
+#    
+#    print(M, nu)
+    
+
+def integrand(F, h0):
+    """
+    """
+
+    h = h0 - F
+    a = equilSoundSpeeds(AIR, h)
+    
+#    print(a)
+#    print(F)
+#    print('----')
+    
+    try:
+        fn = (1.0 / F) * math.sqrt((2 * F / a) - 1)
+    except ValueError:
+        return np.inf
+        
+    return fn
+
+from scipy.integrate import quad
+from scipy.optimize import fsolve
+
+
+def func(F, Fa, h0, dtheta):
+
+    y, err = quad(integrand, Fa, F, args=(h0))
+    
+    print(y  -dtheta)
+    
+    return y - dtheta
+
+
+def main(ua, h0, dtheta):
+    
+    dtheta = degrees_to_radians(dtheta)
+    
+    Fa = 0.5 * ua ** 2
+    
+    sol = fsolve(func, 0, args=(Fa, h0, dtheta))
+    
+    sol = sol[0]
+    
+    u = math.sqrt(2 * sol)
+    h = h0 - 0.5 * u ** 2
+    
+    a = equilSoundSpeeds(AIR, h)
+
+    print(u/a)
+
+    # print('Solution: {}'.format(sol[0]))
     
     
 if __name__ == "__main__":
     pass
 
     # Combustion Chamber Properties
-    Tc = 900  # K
-    Pc = 1.013e7  # Pa
+    Tc = 6140  # K
+    Pc = 1.2 * 101325  # Pa
 
     AIR = ct.Solution('air.cti')
     AIR.TP = Tc, Pc
+    AIR.equilibrate('TP')
+    
+    main(1700, AIR.h, 20)
 
-    h0 = AIR.h
-    s0 = AIR.s
-    # h0, s0 = calculate_stagnation_h_s(Tc, Pc)
-
-    prandtl_meyer_real_gas(AIR, 700, h0, s0, degrees_to_radians(20))
+    # sol = fsolve(func, 3.0, args=())
+    # print('Solution: {}'.format(sol[0]))
