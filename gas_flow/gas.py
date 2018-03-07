@@ -63,8 +63,9 @@ def speed_of_sound(gas, rtol=1.0e-6, maxiter=5000):
     aequil = math.sqrt((p1 - p0)/(gas.density - r0))
 
     # Method #2 to calculate "frozen" a via the ideal gas expression
-    gamma = gas.cp/gas.cv
-    afrozen2 = math.sqrt(gamma * ct.gas_constant * gas.T / gas.mean_molecular_weight)
+    gamma = gas.cp / gas.cv
+    mw = gas.mean_molecular_weight
+    afrozen2 = math.sqrt(gamma * ct.gas_constant * gas.T / mw)
 
     # Set pressure back to initial value (not needed if perturbation is small)
     # gas.SP = s0, p0

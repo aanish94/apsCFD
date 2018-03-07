@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Normal Shock Relations
+"""Equilibrium Normal Shock Relations
 """
 
 import matplotlib.pyplot as plt
