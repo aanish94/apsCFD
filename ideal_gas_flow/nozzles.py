@@ -4,8 +4,7 @@
 """Isentropic Flow Relations
 """
 
-import math
-from scipy import optimize
+import numpy as np
 
 import isentropic
 import normal_shock
@@ -18,7 +17,20 @@ class Nozzle(object):
     def __init__(self):
         pass
 
-    def solve_flow_given_stagnation(p0, T0, p_back, Ae_Astar, gamma):
+    def mass_flow_rate(rho, u, A):
+        """Calculate flow through the nozzle given stagnation
+        properties and back pressure
+
+        :param <float> rho: Density (kg/m^3)
+        :param <float> u: Flow speed (m/s)
+        :param <float> A: Nozzle cross-sectional area (m^2)
+
+        :return <float> mdot (kg/s)
+        """
+
+        return rho * u * A
+
+    def solve_flow_given_stagnation(self, p0, T0, p_back, Ae_Astar, gamma):
         """Calculate flow through the nozzle given stagnation
         properties and back pressure
 
@@ -64,6 +76,32 @@ class Nozzle(object):
             M = Me2
 
         return M
+
+    def visualize_flow(self, Ae_Astar, gamma):
+        """Visualize property variations through the nozzle
+
+        :param <float> Ae_Astar: Exit area ratio
+        :param <float> gamma: Specific heat ratio
+
+        """
+
+        # Create area array from throat to exit
+        A_arr = np.linspace(1, Ae_Astar, num=100)
+
+        M_arr = np.empty_like(A_arr)
+
+        # Calculate Mach # at each area ratio
+        for idx, A_Astar in enumerate(A_arr):
+            M_arr[idx] = isentropic.mach_from_area_ratio(A_Astar, gamma)
+
+        p_p0_arr = 1 / isentropic.p0_p(M_arr, gamma)
+        T_T0_arr = 1 / isentropic.T0_T(M_arr, gamma)
+
+        # rho_arr = ideal_density(p_arr, R/MW, T_arr)
+        # c_arr = ideal_sound(p_arr, rho_arr, gamma)
+        # u_arr = M_arr * c_arr
+
+        return M_arr, p_p0_arr, T_T0_arr
 
 
 if __name__ == "__main__":
