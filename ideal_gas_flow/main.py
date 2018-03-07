@@ -53,7 +53,7 @@ def create_oblique_shock_graph(M_list, gamma):
 if __name__ == "__main__":
     pass
 
-    M_list =[1.5, 2.0, 3.0, 5.0, np.inf]
+    M_list = [1.5, 2.0, 3.0, 5.0, np.inf]
     gamma = 1.4
 
     create_oblique_shock_graph(M_list, gamma)

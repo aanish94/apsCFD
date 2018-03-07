@@ -19,9 +19,23 @@ def A_Astar(M, gamma):
 
     t1 = (gamma + 1.0) / (gamma - 1.0)
     m2 = M ** 2
-    t2 = 1.0 / m2 * (2.0 / (gamma + 1.0) * (1.0 +(gamma - 1.0) * 0.5 * m2)) ** t1
+    t2 = 1.0 / m2 * (2.0 / (gamma + 1.0) *
+                     (1.0 + (gamma - 1.0) * 0.5 * m2)) ** t1
 
     return math.sqrt(t2)
+
+
+def ideal_gas_law(p, R, T):
+    """Solve ideal gas law for density
+
+    :param <float> p: Pressure (Pa)
+    :param <float> R: Gas Constant (J/kg/K)
+    :param <float> T: Temperature (K)
+
+    :return <float> rho (kg/m^3)
+    """
+
+    return p / (R * T)
 
 
 def mach_angle(M):
@@ -42,7 +56,7 @@ def mach_from_area_ratio(A_Astar_in, gamma):
     :param <float> gamma: Specific heat ratio
 
     :return <float> M_sub: Subsonic Mach # at area A
-    :return <float> M_super: Supersonic Mach # at area A    
+    :return <float> M_super: Supersonic Mach # at area A
     """
 
     def f_to_solve(M):
@@ -67,7 +81,8 @@ def p0_p(M, gamma):
 
 
 def r0_r(M, gamma):
-    """Ratio of stagnation to free-stream density for isentropic flow (eq. 3.31)
+    """Ratio of stagnation to free-stream density for isentropic
+    flow (eq. 3.31)
 
     :param <float> M: Mach # at area A
     :param <float> gamma: Specific heat ratio
@@ -76,6 +91,19 @@ def r0_r(M, gamma):
     """
 
     return (T0_T(M, gamma)) ** (1.0 / (gamma - 1.0))
+
+
+def speed_of_sound(p, rho, gamma):
+    """Calculate perfect gas speed of sound
+
+    :param <float> p: Pressure (Pa)
+    :param <float> rho: Density (kg/m^3)
+    :param <float> gamma: Specific heat ratio
+
+    :return <float> a (m/s)
+    """
+
+    return math.sqrt(gamma * p / rho)
 
 
 def T0_T(M, gamma):

@@ -8,7 +8,7 @@ import math
 from scipy import optimize
 
 
-def nu(M , gamma):
+def nu(M, gamma):
     """Prandtl-Meyer function (eq. 4.44)
 
     :param <float> M: Mach # before the shock
@@ -20,12 +20,12 @@ def nu(M , gamma):
     # Supersonic
     if M > 1.0:
         t1 = M ** 2 - 1.0
-        t2 = math.sqrt(( gamma - 1.0) / ( gamma + 1.0) * t1 )
-        t3 = math.sqrt( t1 )
-        t4 = math.sqrt(( gamma + 1.0) / ( gamma - 1.0) )
-        nu = t4 * math.atan( t2 ) - math.atan( t3 )
+        t2 = math.sqrt((gamma - 1.0) / (gamma + 1.0) * t1)
+        t3 = math.sqrt(t1)
+        t4 = math.sqrt((gamma + 1.0) / (gamma - 1.0))
+        nu = t4 * math.atan(t2) - math.atan(t3)
     # Subsonic
-    else :
+    else:
         nu = 0.0
 
     return nu

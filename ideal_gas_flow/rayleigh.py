@@ -4,7 +4,8 @@
 """Rayleigh Flow (1-D flow w/ heat addition)
 
 Note:
-    - Star denotes conditions achieved if sufficient heat was added to achieve sonic conditions.
+    - Star denotes conditions achieved if sufficient heat was added to achieve
+    sonic conditions.
 """
 
 import math
@@ -74,7 +75,7 @@ def T_Tstar(M, gamma):
     :return <float> Static temperature ratio T/Tstar
     """
 
-    return M ** 2  * ((1.0 + gamma) / (1.0 + gamma * M ** 2)) ** 2
+    return M ** 2 * ((1.0 + gamma) / (1.0 + gamma * M ** 2)) ** 2
 
 
 def T0_T0star(M, gamma):

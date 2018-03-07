@@ -43,7 +43,7 @@ def mach(M, beta, theta, gamma):
     """
 
     m1sb = M * math.sin(beta)
-    
+
     n1 = 1.0 + (gamma - 1.0) * 0.5 * m1sb ** 2
     d1 = gamma * m1sb ** 2 - (gamma - 1.0) * 0.5
 
@@ -121,7 +121,7 @@ def theta(M, beta, gamma):
 
     t1 = 2.0 / math.tan(beta) * (m1sb ** 2 - 1.0)
     t2 = M ** 2 * (gamma + math.cos(2.0 * beta)) + 2.0
-    
+
     return math.atan(t1 / t2)
 
 
@@ -148,6 +148,7 @@ def u2_u1(M, beta, gamma):
     :return <float> Velocity ratio u2/u1
     """
 
-    t1 = math.sqrt((math.sin(beta) / rho2_rho1(M, beta, gamma)) ** 2 + (math.cos(beta)) ** 2)
+    t1 = (math.sin(beta) / rho2_rho1(M, beta, gamma)) ** 2
+    t2 = (math.cos(beta)) ** 2
 
-    return t1
+    return math.sqrt(t1 + t2)
