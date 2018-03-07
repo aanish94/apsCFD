@@ -20,7 +20,7 @@ def initialize_gas_object(name):
     """
 
     name = name.lower().strip()
-    
+
     if not name.endswith('.cti'):
         name += '.cti'
 
@@ -36,7 +36,7 @@ def speed_of_sound(gas, rtol=1.0e-6, maxiter=5000):
 
     :param <cantera.composite.Solution> gas: Solution object
 
-    :return <float> Speed of sound for a gas with an equilibrium composition (m/s)
+    :return <float> Gas speed of sound w/ an equilibrium composition (m/s)
     """
 
     # Set the gas to equilibrium at its current T and P
@@ -50,7 +50,7 @@ def speed_of_sound(gas, rtol=1.0e-6, maxiter=5000):
     # Perturb the pressure
     p1 = p0 * 1.0001
 
-    # Set a new state with the same entropy and composition but adjusted pressure
+    # Set a new state w/ the same entropy and composition but adjusted pressure
     gas.SP = s0, p1
 
     # Method #1 to calculate "frozen" speed of sound
@@ -62,7 +62,7 @@ def speed_of_sound(gas, rtol=1.0e-6, maxiter=5000):
     # Calcluate the equilibrium speed of sound
     aequil = math.sqrt((p1 - p0)/(gas.density - r0))
 
-    # Method #2 to calculate "frozen" speed of sound via the ideal gas expression
+    # Method #2 to calculate "frozen" a via the ideal gas expression
     gamma = gas.cp/gas.cv
     afrozen2 = math.sqrt(gamma * ct.gas_constant * gas.T / gas.mean_molecular_weight)
 

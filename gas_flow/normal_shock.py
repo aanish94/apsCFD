@@ -33,25 +33,26 @@ def conservation_of_momentum(p1, u1, rho1, rho2):
     :param <float> rho1: Density state 1 (kg/m^3)
     :param <float> rho2: Density state 2 (kg/m^3)
 
-    :return <float> p2: Pressure state 2 (Pa)    
+    :return <float> p2: Pressure state 2 (Pa)
     """
 
     return p1 + rho1 * u1 ** 2 * (1 - rho1 / rho2)
 
 
 def normal_shock(gas, u1, T1, p1):
-    """Equilibrium normal shock wave flow - calculate post-shock conditions (eq. 17.4)
+    """Equilibrium normal shock wave flow - calculate post-shock
+    conditions (eq. 17.4)
 
     :param <cantera.composite.Solution> gas: Solution object
     :param <float> u1: Velocity pre-shock (m/s)
     :param <float> T1: Temperature pre-shock (K)
     :param <float> p1: Pressure pre-shock (Pa)
-    
+
     :return <float> u2: Velocity post-shock (m/s)
     :return <float> T2: Temperature post-shock (K)
     """
 
-    # Bring gas to equilibrium at specified temperature and pressure    
+    # Bring gas to equilibrium at specified temperature and pressure
     gas.TP = T1, p1
     gas.equilibrate('TP')
 
@@ -68,7 +69,7 @@ def normal_shock(gas, u1, T1, p1):
         # Calculate pressure and enthalpy from conservation laws
         p = conservation_of_momentum(p1, u1, rho1, rho)
         h = conservation_of_energy(h1, u1, rho1, rho)
-        
+
         # Bring gas to equilibrium at specified enthalpy and pressure
         air.HP = h, p
         air.equilibrate('HP')
@@ -76,7 +77,7 @@ def normal_shock(gas, u1, T1, p1):
         # Determine new density and return delta
         rho2 = air.density
         return rho - rho2
-    
+
     # Solve iteratively for rho2
     rho2_guess = 10 * rho1  # assue an initial value
     rho2 = fsolve(solve_for_rho2, x0=rho2_guess)[0]
@@ -88,7 +89,7 @@ def normal_shock(gas, u1, T1, p1):
     a2, _, _ = speed_of_sound(air)
 
     # print ("Final Mach #: {}".format(u2 / a2))
-    
+
     return u2, T2, p2
 
 
@@ -100,12 +101,12 @@ if __name__ == "__main__":
 
     u1 = np.linspace(1000, 14000)
     T2_T1 = np.zeros(u1.shape)
-    
+
     for idx, u in enumerate(u1):
         air = initialize_gas_object('airNASA9')
 
         _, T2, _ = normal_shock(air, u, T1, p1)
-        T2_T1[idx] = T2 / T1        
+        T2_T1[idx] = T2 / T1
 
     # plt.figure()
     plt.plot(u1, T2_T1)

@@ -53,8 +53,9 @@ T_STD = [
 
 # Pressure [Pa]
 P_STD = [
-    101325, 22632.06397346291, 5474.8886696777745, 868.0186847552279, 110.90630555496608,
-    66.93887311868738, 3.956420428040732, 0.3733835899762159
+    101325, 22632.06397346291, 5474.8886696777745, 868.0186847552279,
+    110.90630555496608, 66.93887311868738, 3.956420428040732,
+    0.3733835899762159
 ]
 
 
@@ -62,7 +63,7 @@ def geometric_to_geopotential(z):
     """Calculates geopotential altitude from geometric altitude.
 
     :param <float> z: Geometric altitude (m)
-    
+
     :return <float> h: Geopotential altitude (m)
     """
 
@@ -74,7 +75,7 @@ def geopotential_to_geometric(h):
 
     :param <float> h: Geopotential altitude (m)
 
-    :return <float> z: Geometric altitude (m)    
+    :return <float> z: Geometric altitude (m)
     """
 
     return h * EARTH_RADIUS / (EARTH_RADIUS - h)
@@ -166,7 +167,8 @@ class Atmosphere(object):
 
     @staticmethod
     def gravity(Z):
-        """Gravitational acceleration above Earth as a function of elevationonly.
+        """Gravitational acceleration above Earth as a function of
+        elevation only.
 
         :param <float> Z: elevation (m)
 
@@ -182,7 +184,7 @@ class Atmosphere(object):
         :param <float> T: temperature (K)
 
         :return <float> Speed of sound (m/s)
-        
+
         """
         return ((GAMMA_AIR * R / MW_AIR) * T) ** 0.5
 
