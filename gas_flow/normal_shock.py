@@ -106,7 +106,7 @@ if __name__ == "__main__":
     ft_to_m = 0.3048
 
     # Gas model
-    air = initialize_gas_object('airNASA9')
+    air = initialize_gas_object('air')
 
     """Recreate Fig. 14.3 from Anderson Hypersonic & High Temperature Gas Dynamics
     """
@@ -141,69 +141,69 @@ if __name__ == "__main__":
     """Recreate Fig. 14.4 & 14.5 from Anderson Hypersonic & High Temperature Gas Dynamics
     """
 
-    altitudes = np.array([35900, 59800, 82200, 100000, 120300, 154800, 173500,
-                          200100, 230400, 259700, 294800, 322900]) * ft_to_m
-
-    fig1, ax1 = plt.subplots(figsize=(12, 9))
-    fig2, ax2 = plt.subplots(figsize=(12, 9))
-
-    T1 = 225.0
-
-    # Convert altitudes into ambient pressures
-    pressures = np.zeros_like(altitudes)
-    for idx, altitude in enumerate(altitudes):
-        a = Atmosphere(altitude)
-        pressures[idx] = a.P
-
-    u1 = np.linspace(4000, 46000) * ft_to_m
-
-    # Calculate shock properties for each pressure
-    for pidx, p1 in enumerate(pressures):
-        T2_arr = np.zeros_like(u1)
-        rho2_rho1_arr = np.zeros_like(u1)
-
-        for uidx, u in enumerate(u1):
-
-            _, rho2_rho1, T2, _ = normal_shock(air, u, T1, p1)
-            T2_arr[uidx] = T2
-            rho2_rho1_arr[uidx] = rho2_rho1
-
-        ax1.plot(u1 / ft_to_m, T2_arr, label='Altitude: {} ft'.format(altitudes[pidx] / ft_to_m))
-        ax2.plot(u1 / ft_to_m, rho2_rho1_arr, label='Altitude: {} ft'.format(altitudes[pidx] / ft_to_m))
-
-    # Plot exact values
-#    with open('topic_2b/reference_figure_14_4a.csv','r') as csvfile:
+#    altitudes = np.array([35900, 59800, 82200, 100000, 120300, 154800, 173500,
+#                          200100, 230400, 259700, 294800, 322900]) * ft_to_m
+#
+#    fig1, ax1 = plt.subplots(figsize=(12, 9))
+#    fig2, ax2 = plt.subplots(figsize=(12, 9))
+#
+#    T1 = 225.0
+#
+#    # Convert altitudes into ambient pressures
+#    pressures = np.zeros_like(altitudes)
+#    for idx, altitude in enumerate(altitudes):
+#        a = Atmosphere(altitude)
+#        pressures[idx] = a.P
+#
+#    u1 = np.linspace(4000, 46000) * ft_to_m
+#
+#    # Calculate shock properties for each pressure
+#    for pidx, p1 in enumerate(pressures):
+#        T2_arr = np.zeros_like(u1)
+#        rho2_rho1_arr = np.zeros_like(u1)
+#
+#        for uidx, u in enumerate(u1):
+#
+#            _, rho2_rho1, T2, _ = normal_shock(air, u, T1, p1)
+#            T2_arr[uidx] = T2
+#            rho2_rho1_arr[uidx] = rho2_rho1
+#
+#        ax1.plot(u1 / ft_to_m, T2_arr, label='Altitude: {} ft'.format(altitudes[pidx] / ft_to_m))
+#        ax2.plot(u1 / ft_to_m, rho2_rho1_arr, label='Altitude: {} ft'.format(altitudes[pidx] / ft_to_m))
+#
+#    # Plot exact values
+##    with open('topic_2b/reference_figure_14_4a.csv','r') as csvfile:
+##        exacts = csv.reader(csvfile, delimiter=',')
+##        for row in exacts:
+##            ax1.plot(float(row[0]), float(row[1]), marker='x', color='r', markersize=10)
+#    with open('topic_2b/reference_figure_14_4b.csv','r') as csvfile:
 #        exacts = csv.reader(csvfile, delimiter=',')
 #        for row in exacts:
-#            ax1.plot(float(row[0]), float(row[1]), marker='x', color='r', markersize=10)
-    with open('topic_2b/reference_figure_14_4b.csv','r') as csvfile:
-        exacts = csv.reader(csvfile, delimiter=',')
-        for row in exacts:
-            ax1.plot(float(row[0]), float(row[1]), marker='x', color='r', markersize=5)
-
-#    with open('topic_2b/reference_figure_14_5a.csv','r') as csvfile:
-#        exacts = csv.reader(csvfile, delimiter=',')
-#        for row in exacts:
-#            ax2.plot(float(row[0]), float(row[1]), marker='x', color='r', markersize=10)
-#    with open('topic_2b/reference_figure_14_5b.csv','r') as csvfile:
-#        exacts = csv.reader(csvfile, delimiter=',')
-#        for row in exacts:
-#            ax2.plot(float(row[0]), float(row[1]), marker='x', color='r', markersize=5)            
-
-    # Plot formatting
-    ax1.legend(loc='best')
-    ax1.set_xlabel(r'$u_1 (\frac{ft}{s})$', fontsize=18)
-    ax1.set_ylabel(r'$T_2 (K)$', fontsize=18)
-    ax1.set_title('Variation of Normal Shock Temperature with Velocity & Altitude', fontsize=16)
-    ax1.set_xticks(np.arange(min(u1 / ft_to_m), max(u1 / ft_to_m) + 1, 2000))
-    fig1.tight_layout()
-    fig1.savefig('topic_2b/figure_14_4.png', bbox_inches='tight')
-
-    # Plot formatting
-    ax2.legend(loc='best')
-    ax2.set_xlabel(r'$u_1 (\frac{ft}{s})$', fontsize=18)
-    ax2.set_ylabel(r'$\frac{\rho_2}{\rho_1}$', fontsize=18)
-    ax2.set_title('Variation of Normal Shock Density with Velocity & Altitude', fontsize=16)
-    ax2.set_xticks(np.arange(min(u1 / ft_to_m), max(u1 / ft_to_m) + 1, 2000))    
-    fig2.tight_layout()
-    fig2.savefig('topic_2b/figure_14_5.png', bbox_inches='tight')
+#            ax1.plot(float(row[0]), float(row[1]), marker='x', color='r', markersize=5)
+#
+##    with open('topic_2b/reference_figure_14_5a.csv','r') as csvfile:
+##        exacts = csv.reader(csvfile, delimiter=',')
+##        for row in exacts:
+##            ax2.plot(float(row[0]), float(row[1]), marker='x', color='r', markersize=10)
+##    with open('topic_2b/reference_figure_14_5b.csv','r') as csvfile:
+##        exacts = csv.reader(csvfile, delimiter=',')
+##        for row in exacts:
+##            ax2.plot(float(row[0]), float(row[1]), marker='x', color='r', markersize=5)            
+#
+#    # Plot formatting
+#    ax1.legend(loc='best')
+#    ax1.set_xlabel(r'$u_1 (\frac{ft}{s})$', fontsize=18)
+#    ax1.set_ylabel(r'$T_2 (K)$', fontsize=18)
+#    ax1.set_title('Variation of Normal Shock Temperature with Velocity & Altitude', fontsize=16)
+#    ax1.set_xticks(np.arange(min(u1 / ft_to_m), max(u1 / ft_to_m) + 1, 2000))
+#    fig1.tight_layout()
+#    fig1.savefig('topic_2b/figure_14_4.png', bbox_inches='tight')
+#
+#    # Plot formatting
+#    ax2.legend(loc='best')
+#    ax2.set_xlabel(r'$u_1 (\frac{ft}{s})$', fontsize=18)
+#    ax2.set_ylabel(r'$\frac{\rho_2}{\rho_1}$', fontsize=18)
+#    ax2.set_title('Variation of Normal Shock Density with Velocity & Altitude', fontsize=16)
+#    ax2.set_xticks(np.arange(min(u1 / ft_to_m), max(u1 / ft_to_m) + 1, 2000))    
+#    fig2.tight_layout()
+#    fig2.savefig('topic_2b/figure_14_5.png', bbox_inches='tight')
