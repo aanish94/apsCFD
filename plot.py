@@ -86,7 +86,6 @@ def plot_simple_region(ax, theta, m, x, y, gamma, cl, ch):
     # Count the number of waves
     nwaves = theta.shape[1]
 
-
 #    # Calculate Mach # from PM angles
 #    m = np.zeros(pm.shape)
 #    for i in range(len(pm)):
