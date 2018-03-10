@@ -29,6 +29,7 @@ def initialize_gas_object(name):
         pass
 
     return ct.Solution(name)
+    # return ct.ThermoPhase(name)
 
 
 def speed_of_sound(gas, rtol=1.0e-6, maxiter=5000):
