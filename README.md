@@ -9,6 +9,10 @@ domain by executing:
 4. Solve Conservation Laws
 5. Post-Processing
 
+## Results ##
+
+Example output for over-expanded flow: https://www.youtube.com/watch?v=qgqHJTZpAjY
+
 ## Geometry ##
 
 The geometry defines the physical domain over which the conservation laws will
